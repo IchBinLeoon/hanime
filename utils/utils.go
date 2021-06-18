@@ -28,3 +28,12 @@ func CleanUp(path string) error {
 	}
 	return nil
 }
+
+func CheckIfInArray(arr []string, val string) bool {
+	for _, i := range arr {
+		if i == val {
+			return true
+		}
+	}
+	return false
+}

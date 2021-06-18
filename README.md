@@ -21,14 +21,20 @@ go get -u github.com/IchBinLeoon/hanime
 hanime get https://hanime.tv/videos/hentai/XXX
 ```
 
-### Specify output path and name
-The `-o` or `--output` flag sets the output path and name
+### Specify the video quality
+The `-q` or `--quality` flag sets the video quality. Default is 1080.
+```
+hanime get https://hanime.tv/videos/hentai/XXX -q 720
+```
+
+### Specify the output path and name
+The `-o` or `--output` flag sets the output path and name.
 ```
 hanime get https://hanime.tv/videos/hentai/XXX -o /home/ichbinleoon/XXX.mp4
 ```
 
 ### Specify a proxy
-The `-p` or `--proxy` flag sets a proxy
+The `-p` or `--proxy` flag sets a proxy.
 ```
 hanime get https://hanime.tv/videos/hentai/XXX -p XXX://host:port 
 ```

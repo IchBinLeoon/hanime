@@ -25,13 +25,22 @@ var tmpPath string
 var outputPath string
 var fileListPath string
 
-var proxyFlag string
+var videoQualities = []string{
+	"1080",
+	"720",
+	"480",
+	"360",
+}
+
+var qualityFlag string
 var outputFlag string
+var proxyFlag string
 
 func init() {
 	rootCmd.AddCommand(getCmd)
+	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", "1080", "specify the video quality")
+	getCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "specify the output path and name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "specify a proxy")
-	getCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "specify output path and name")
 }
 
 var getCmd = &cobra.Command{
@@ -63,11 +72,16 @@ func get(url string) error {
 		return err
 	}
 
+	index, err := getStreamIndex(video.VideosManifest.Servers[0].Streams)
+	if err != nil {
+		return err
+	}
+
 	name := video.HentaiVideo.Name
 	slug := video.HentaiVideo.Slug
-	quality := video.VideosManifest.Servers[0].Streams[0].Height
-	size := video.VideosManifest.Servers[0].Streams[0].Size
-	id := video.VideosManifest.Servers[0].Streams[0].ID
+	quality := video.VideosManifest.Servers[0].Streams[index].Height
+	size := video.VideosManifest.Servers[0].Streams[index].Size
+	id := video.VideosManifest.Servers[0].Streams[index].ID
 
 	pathsErr := setPaths(slug, quality, id)
 	if pathsErr != nil {
@@ -167,6 +181,18 @@ func parseUrl(url string) (string, error) {
 		return m[1], nil
 	}
 	return "", fmt.Errorf("error: url '%s' is invalid", url)
+}
+
+func getStreamIndex(streams []types.Stream) (int, error) {
+	if !utils.CheckIfInArray(videoQualities, qualityFlag) {
+		return 0, fmt.Errorf("error: quality '%s' is invalid, possible values: 1080, 720, 480, 360", qualityFlag)
+	}
+	for k, v := range streams {
+		if v.Height == qualityFlag {
+			return k, nil
+		}
+	}
+	return 0, nil
 }
 
 func setPaths(slug string, quality string, id int64) error {
