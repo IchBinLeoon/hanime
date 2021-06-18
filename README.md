@@ -5,10 +5,16 @@
 
 Command-line tool to download videos from hanime.tv
 
+## Requirements
+- Go
+- FFmpeg
+
 ## Installation
 ```
 go get -u github.com/IchBinLeoon/hanime
 ```
+
+
 
 ## Usage
 ```
