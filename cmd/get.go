@@ -36,11 +36,22 @@ var qualityFlag string
 var outputFlag string
 var proxyFlag string
 
+var getUsage = `Usage:
+  hanime get <url> [flags]
+
+Flags:
+  -h, --help      help for get
+  -o, --output    output path and name
+  -p, --proxy     proxy url
+  -q, --quality	  video quality (default 1080)
+`
+
 func init() {
 	rootCmd.AddCommand(getCmd)
-	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", "1080", "specify the video quality")
-	getCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "specify the output path and name")
-	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "specify a proxy")
+	getCmd.SetUsageTemplate(getUsage)
+	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", "1080", "video quality")
+	getCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "output path and name")
+	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
 }
 
 var getCmd = &cobra.Command{

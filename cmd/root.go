@@ -7,12 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "1.0.0"
-
 var rootCmd = &cobra.Command{
-	Use:   "hanime",
-	Short: "Command-line tool to download videos from hanime.tv",
-	Long:  "Command-line tool to download videos from hanime.tv\n\nComplete documentation is available at https://github.com/IchBinLeoon/hanime",
+	Use:     "hanime",
+	Version: "1.0.0",
+	Short:   "Command-line tool to download videos from hanime.tv",
+	Long:    "Command-line tool to download videos from hanime.tv\n\nComplete documentation is available at https://github.com/IchBinLeoon/hanime",
 }
 
 func Execute() {
