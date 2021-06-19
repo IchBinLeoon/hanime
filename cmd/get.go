@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/IchBinLeoon/hanime/types"
 	"github.com/IchBinLeoon/hanime/utils"
@@ -36,6 +37,7 @@ var qualityFlag string
 var outputPathFlag string
 var outputNameFlag string
 var proxyFlag string
+var infoFlag bool
 
 var getUsage = `Usage:
   hanime get <url> [flags]
@@ -46,6 +48,7 @@ Flags:
   -o, --output    custom output path
   -O, --Output    custom output name
   -p, --proxy     proxy url
+  -i, --info      display video info
 `
 
 func init() {
@@ -55,6 +58,7 @@ func init() {
 	getCmd.Flags().StringVarP(&outputPathFlag, "output", "o", "", "custom output path")
 	getCmd.Flags().StringVarP(&outputNameFlag, "Output", "O", "", "custom output name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
+	getCmd.Flags().BoolVarP(&infoFlag, "info", "i", false, "display video info")
 }
 
 var getCmd = &cobra.Command{
@@ -102,7 +106,21 @@ func get(url string) error {
 		return pathsErr
 	}
 
-	fmt.Println(fmt.Sprintf("\n%s - %s", name, quality))
+	if infoFlag {
+		fmt.Println(fmt.Sprintf("\nName:\t\t%s", name))
+		fmt.Println(fmt.Sprintf("Quality:\t%sp", quality))
+		fmt.Println(fmt.Sprintf("Views:\t\t%d", video.HentaiVideo.Views))
+		fmt.Println(fmt.Sprintf("Interests:\t%d", video.HentaiVideo.Interests))
+		fmt.Println(fmt.Sprintf("Brand:\t\t%s", video.HentaiVideo.Brand))
+		fmt.Println(fmt.Sprintf("Likes:\t\t%d", video.HentaiVideo.Likes))
+		fmt.Println(fmt.Sprintf("Dislikes:\t%d", video.HentaiVideo.Dislikes))
+		fmt.Println(fmt.Sprintf("Downloads:\t%d", video.HentaiVideo.Downloads))
+		fmt.Println(fmt.Sprintf("Monthly Rank:\t%d", video.HentaiVideo.MonthlyRank))
+		fmt.Println(fmt.Sprintf("Created At:\t%s", time.Unix(video.HentaiVideo.CreatedAtUnix, 0)))
+		fmt.Println(fmt.Sprintf("Released At:\t%s", time.Unix(video.HentaiVideo.ReleasedAtUnix, 0)))
+	} else {
+		fmt.Println(fmt.Sprintf("\n%s - %s", name, quality))
+	}
 	fmt.Println(fmt.Sprintf("\nTotal Download Size: %d MB", size))
 	fmt.Println(fmt.Sprintf("\nOutput: %s\n", outputPath))
 

@@ -6,8 +6,18 @@ type Video struct {
 }
 
 type HentaiVideo struct {
-	Name      string `json:"name"`
-	Slug      string `json:"slug"`
+	Name           string `json:"name"`
+	Slug           string `json:"slug"`
+	Description    string `json:"description"`
+	Views          int64  `json:"views"`
+	Interests      int64  `json:"interests"`
+	Brand          string `json:"brand"`
+	Likes          int64  `json:"likes"`
+	Dislikes       int64  `json:"dislikes"`
+	Downloads      int64  `json:"downloads"`
+	MonthlyRank    int64  `json:"monthly_rank"`
+	CreatedAtUnix  int64  `json:"created_at_unix"`
+	ReleasedAtUnix int64  `json:"released_at_unix"`
 }
 
 type VideosManifest struct {

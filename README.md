@@ -6,14 +6,15 @@
 Command-line tool to download videos from hanime.tv
 
 - [Installation](#Installation)
-    - [Requirements](#Requirements)
-    - [Install via `go get`](#Install-via-go-get`)
-    - [Install from source](#Install-from-source)
+  - [Requirements](#Requirements)
+  - [Install via `go get`](#Install-via-go-get)
+  - [Install from source](#Install-from-source)
 - [Usage](#Usage)
-    - [Download a video](#Download-a-video)
-    - [Specify the video quality](#Specify-the-video-quality)
-    - [Specify a custom output path and name](#Specify-a-custom-output-path-and-name)
-    - [Use a proxy](#Use-a-proxy)
+  - [Download a video](#Download-a-video)
+  - [Specify the video quality](#Specify-the-video-quality)
+  - [Specify a custom output path and name](#Specify-a-custom-output-path-and-name)
+  - [Use a proxy](#Use-a-proxy)
+  - [Display video info](#Display-video-info)
 - [Contribute](#Contribute)
 - [License](#License)
 
@@ -58,6 +59,12 @@ hanime get https://hanime.tv/videos/hentai/XXX -o /home/ichbinleoon/XXX -O XXX.m
 The `-p` or `--proxy` flag sets a proxy.
 ```
 hanime get https://hanime.tv/videos/hentai/XXX -p XXX://host:port 
+```
+
+### Display video info
+The `-i` or `--info` flag displays information about the video.
+```
+hanime get https://hanime.tv/videos/hentai/XXX -i
 ```
 
 ## Contribute
