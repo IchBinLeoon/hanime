@@ -1,14 +1,16 @@
 # hanime
+[![Go](https://img.shields.io/github/go-mod/go-version/IchBinLeoon/hanime?style=flat-square)](https://golang.org/)
 [![Release](https://img.shields.io/github/v/release/IchBinLeoon/hanime?style=flat-square)](https://github.com/IchBinLeoon/hanime/releases)
 [![Commit](https://img.shields.io/github/last-commit/IchBinLeoon/hanime?style=flat-square)](https://github.com/IchBinLeoon/hanime/commits/main)
 [![License](https://img.shields.io/github/license/IchBinLeoon/hanime?style=flat-square)](https://github.com/IchBinLeoon/hanime/blob/main/LICENSE)
 
 Command-line tool to download videos from hanime.tv
 
+- [Requirements](#Requirements)
 - [Installation](#Installation)
-  - [Requirements](#Requirements)
-  - [Install via `go get`](#Install-via-go-get)
+  - [Install via go get](#Install-via-go-get)
   - [Install from source](#Install-from-source)
+  - [Install from release](#Install-from-release)
 - [Usage](#Usage)
   - [Download a video](#Download-a-video)
   - [Specify the video quality](#Specify-the-video-quality)
@@ -18,24 +20,27 @@ Command-line tool to download videos from hanime.tv
 - [Contribute](#Contribute)
 - [License](#License)
 
-## Installation
-### Requirements
-- [Go](https://golang.org/)
+## Requirements
 - [FFmpeg](https://www.ffmpeg.org/)
 
-### Install via `go get`
+## Installation
+### Install via go get
+Make sure you have [Go](https://golang.org/) installed.
 ```
 go get -u github.com/IchBinLeoon/hanime
 ```
 
 ### Install from source
+Make sure you have [Go](https://golang.org/) installed.
 ```
 git clone https://github.com/IchBinLeoon/hanime
 cd hanime
 go build
 ```
+You should now be provided with an executable.
 
-
+### Install from release
+If you don't want to build the cli yourself, you can download an executable file [here](https://github.com/IchBinLeoon/hanime/releases).
 
 ## Usage
 ### Download a video
