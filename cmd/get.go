@@ -33,7 +33,8 @@ var videoQualities = []string{
 }
 
 var qualityFlag string
-var outputFlag string
+var outputPathFlag string
+var outputNameFlag string
 var proxyFlag string
 
 var getUsage = `Usage:
@@ -41,16 +42,18 @@ var getUsage = `Usage:
 
 Flags:
   -h, --help      help for get
-  -o, --output    output path and name
-  -p, --proxy     proxy url
   -q, --quality	  video quality (default 1080)
+  -o, --output    custom output path
+  -O, --Output    custom output name
+  -p, --proxy     proxy url
 `
 
 func init() {
 	rootCmd.AddCommand(getCmd)
 	getCmd.SetUsageTemplate(getUsage)
 	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", "1080", "video quality")
-	getCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "output path and name")
+	getCmd.Flags().StringVarP(&outputPathFlag, "output", "o", "", "custom output path")
+	getCmd.Flags().StringVarP(&outputNameFlag, "Output", "O", "", "custom output name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
 }
 
@@ -207,31 +210,28 @@ func getStreamIndex(streams []types.Stream) (int, error) {
 }
 
 func setPaths(slug string, quality string, id int64) error {
-	if outputFlag != "" {
-		split := strings.Split(outputFlag, "/")
-		file := split[len(split)-1]
-		if file == "" {
-			file = fmt.Sprintf("%s-%s", slug, quality)
+	var outputName string
+	if outputNameFlag != "" {
+		if !strings.HasSuffix(outputNameFlag, ".mp4") {
+			outputNameFlag += ".mp4"
 		}
-		if !strings.HasSuffix(file, ".mp4") {
-			file += ".mp4"
+		outputName = outputNameFlag
+	} else {
+		outputName = fmt.Sprintf("%s-%s.mp4", slug, quality)
+	}
+
+	if outputPathFlag != "" {
+		if !utils.CheckIfPathExists(outputPathFlag) {
+			return fmt.Errorf("error: path '%s' does not exist", outputPathFlag)
 		}
-		path := strings.Join(split[:len(split)-1], "/")
-
-		if !utils.CheckIfPathExists(path) {
-			return fmt.Errorf("error: path '%s' is invalid", path)
-		}
-
-		outputPath = filepath.Join(path, file)
-		tmpPath = filepath.Join(path, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
-
+		outputPath = filepath.Join(outputPathFlag, outputName)
+		tmpPath = filepath.Join(outputPathFlag, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
-
-		outputPath = filepath.Join(wd, fmt.Sprintf("%s-%s.mp4", slug, quality))
+		outputPath = filepath.Join(wd, outputName)
 		tmpPath = filepath.Join(wd, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
 	}
 
@@ -241,6 +241,11 @@ func setPaths(slug string, quality string, id int64) error {
 }
 
 func download(client *http.Client, id int64) error {
+	if utils.CheckIfPathExists(tmpPath) {
+		fmt.Println(fmt.Errorf("error: cannot create temporary folder, path '%s' already exists", tmpPath))
+		os.Exit(1)
+	}
+
 	err := utils.MakeDirectoryIfNotExists(tmpPath)
 	if err != nil {
 		return err
