@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,20 +9,16 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/IchBinLeoon/hanime/types"
 	"github.com/IchBinLeoon/hanime/utils"
-	"github.com/grafov/m3u8"
 	"github.com/spf13/cobra"
 )
 
 var tmpPath string
 var outputPath string
-var fileListPath string
 
 var videoQualities = []string{
 	"1080",
@@ -124,7 +118,7 @@ func get(url string) error {
 	fmt.Println(fmt.Sprintf("\nTotal Download Size: %d MB", size))
 	fmt.Println(fmt.Sprintf("\nOutput: %s\n", outputPath))
 
-	c, err := utils.AskForConfirmation("» Proceed with download?")
+	c, err := utils.AskForConfirmation(":: Proceed with download?")
 	if err != nil {
 		return err
 	}
@@ -137,23 +131,11 @@ func get(url string) error {
 		return fmt.Errorf("error: file '%s' already exists", outputPath)
 	}
 
-	fmt.Println("» Downloading media files...\n")
-	dlErr := download(client, id)
+	downloader := utils.Downloader{Client: client}
+	fmt.Printf("\n%s", name)
+	dlErr := downloader.Download(fmt.Sprintf("https://weeb.hanime.tv/weeb-api-cache/api/v8/m3u8s/%d", id), tmpPath, outputPath)
 	if dlErr != nil {
-		return dlErr
-	}
-
-	fmt.Println("\n» Merging media files...")
-	out, err := utils.MergeToMP4(fileListPath, outputPath)
-	if err != nil {
-		fmt.Println(string(out))
 		return err
-	}
-
-	fmt.Println("» Cleaning up...")
-	cleanErr := utils.CleanUp(tmpPath)
-	if cleanErr != nil {
-		fmt.Println(cleanErr)
 	}
 
 	fmt.Println("\nDownload completed!")
@@ -251,184 +233,6 @@ func setPaths(slug string, quality string, id int64) error {
 		}
 		outputPath = filepath.Join(wd, outputName)
 		tmpPath = filepath.Join(wd, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
-	}
-
-	fileListPath = filepath.Join(tmpPath, "filelist.txt")
-
-	return nil
-}
-
-func download(client *http.Client, id int64) error {
-	if utils.CheckIfPathExists(tmpPath) {
-		fmt.Println(fmt.Errorf("error: cannot create temporary folder, path '%s' already exists", tmpPath))
-		os.Exit(1)
-	}
-
-	err := utils.MakeDirectoryIfNotExists(tmpPath)
-	if err != nil {
-		return err
-	}
-
-	data, err := getM3U8(client, id)
-	if err != nil {
-		return err
-	}
-
-	p, listType, err := m3u8.DecodeFrom(bytes.NewBuffer(data), true)
-	if err != nil {
-		return err
-	}
-
-	switch listType {
-	case m3u8.MEDIA:
-		mediapl := p.(*m3u8.MediaPlaylist)
-
-		var segments []string
-		for _, v := range mediapl.Segments {
-			if v != nil {
-				segments = append(segments, v.URI)
-			}
-		}
-
-		err := createFileList(len(segments))
-		if err != nil {
-			return err
-		}
-
-		key, err := getKey(client, mediapl.Key.URI)
-		if err != nil {
-			return err
-		}
-
-		var iv []byte
-		if mediapl.Key.IV == "" {
-			iv = key
-		} else {
-			iv = []byte(mediapl.Key.IV)
-		}
-
-		var bar utils.Bar
-		bar.New(0, int64(len(segments)), "█")
-
-		wg := sync.WaitGroup{}
-		for k, v := range segments {
-			wg.Add(1)
-			go func(index int, url string) {
-				err := downloadTS(client, url, filepath.Join(tmpPath, fmt.Sprintf("%s.ts", strconv.Itoa(index))), key, iv)
-				if err != nil {
-					fmt.Printf("\n\n%s\n", err)
-					cleanErr := utils.CleanUp(tmpPath)
-					if cleanErr != nil {
-						fmt.Println(cleanErr)
-					}
-					os.Exit(1)
-				}
-				wg.Done()
-				bar.Next()
-			}(k, v)
-		}
-		wg.Wait()
-
-		bar.Finish()
-
-		return nil
-	}
-
-	return nil
-}
-
-func getM3U8(client *http.Client, id int64) ([]byte, error) {
-	body, err := utils.Request("GET", client, fmt.Sprintf("https://weeb.hanime.tv/weeb-api-cache/api/v8/m3u8s/%d", id), nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := body.Close(); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func createFileList(count int) error {
-	f, err := os.Create(fileListPath)
-	if err != nil {
-		return err
-	}
-
-	w := bufio.NewWriter(f)
-	for i := 0; i < count; i++ {
-		_, err := fmt.Fprintln(w, fmt.Sprintf("file '%s.ts'", filepath.Join(tmpPath, strconv.Itoa(i))))
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := w.Flush(); err != nil {
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getKey(client *http.Client, url string) ([]byte, error) {
-	body, err := utils.Request("GET", client, url, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := body.Close(); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func downloadTS(client *http.Client, url string, path string, key []byte, iv[]byte) error {
-	body, err := utils.Request("GET", client, url, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
-		return err
-	}
-
-	decrypted, err := utils.Decrypt(data, key, iv)
-	if err != nil {
-		return err
-	}
-
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-
-	if _, err := f.Write(decrypted); err != nil {
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	if err := body.Close(); err != nil {
-		return err
 	}
 
 	return nil
