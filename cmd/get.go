@@ -58,7 +58,7 @@ func init() {
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Download video by url",
+	Short: "Download videos by url",
 	Long:  "Download one or more videos from hanime.tv by url",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
