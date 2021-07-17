@@ -4,7 +4,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
+
+func DefaultClient(proxyUrl string) (*http.Client, error) {
+	transport := &http.Transport{DisableCompression: true}
+	if proxyUrl != "" {
+		proxy, err := url.Parse(proxyUrl)
+		if err != nil {
+			return nil, err
+		}
+		transport.Proxy = http.ProxyURL(proxy)
+	}
+	return &http.Client{Transport: transport}, nil
+}
 
 type HttpError struct {
 	Status string

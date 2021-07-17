@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,8 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const apiVideo = "https://hw.hanime.tv/api/v8/video?id="
+const apiM3U8 = "https://weeb.hanime.tv/weeb-api-cache/api/v8/m3u8s/"
+
 var tmpPath string
-var outputPath string
 
 var videoQualities = []string{
 	"1080",
@@ -34,7 +35,7 @@ var proxyFlag string
 var infoFlag bool
 
 var getUsage = `Usage:
-  hanime get <url> [flags]
+  hanime get <urls> [flags]
 
 Flags:
   -h, --help      help for get
@@ -58,11 +59,11 @@ func init() {
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Download video by url",
-	Long:  "Download a video from hanime.tv by url",
-	Args:  cobra.ExactArgs(1),
+	Long:  "Download one or more videos from hanime.tv by url",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		utils.CatchInterrupt(&tmpPath)
-		if err := get(args[0]); err != nil {
+		if err := get(args); err != nil {
 			fmt.Println(err)
 			cleanErr := utils.CleanUp(tmpPath)
 			if cleanErr != nil {
@@ -73,50 +74,61 @@ var getCmd = &cobra.Command{
 	},
 }
 
-func get(url string) error {
-	client, err := getClient()
+func get(urls []string) error {
+	client, err := utils.DefaultClient(proxyFlag)
 	if err != nil {
 		return err
 	}
 
-	video, err := getVideo(client, url)
-	if err != nil {
-		return err
+	var videos []types.Video
+	for i, url := range urls {
+		video, err := getVideo(client, url)
+		if err != nil {
+			return err
+		}
+		index, err := getStreamIndex(video.VideosManifest.Servers[0].Streams)
+		if err != nil {
+			return err
+		}
+		video.StreamIndex = index
+		path, err := getOutputPath(video.HentaiVideo.Slug, video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
+		if err != nil {
+			return err
+		}
+		if len(urls) > 1 {
+			if outputNameFlag != "" {
+				path = fmt.Sprintf("%s-%d.mp4", path[:len(path)-4], i)
+			}
+		}
+		video.OutputPath = path
+		videos = append(videos, *video)
 	}
 
-	index, err := getStreamIndex(video.VideosManifest.Servers[0].Streams)
-	if err != nil {
-		return err
+	fmt.Print("\n")
+	for _, video := range videos {
+		if infoFlag {
+			fmt.Printf("Name:\t\t%s\n", video.HentaiVideo.Name)
+			fmt.Printf("Quality:\t%s\np", video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
+			fmt.Printf("Views:\t\t%d\n", video.HentaiVideo.Views)
+			fmt.Printf("Interests:\t%d\n", video.HentaiVideo.Interests)
+			fmt.Printf("Brand:\t\t%s\n", video.HentaiVideo.Brand)
+			fmt.Printf("Likes:\t\t%d\n", video.HentaiVideo.Likes)
+			fmt.Printf("Dislikes:\t%d\n", video.HentaiVideo.Dislikes)
+			fmt.Printf("Downloads:\t%d\n", video.HentaiVideo.Downloads)
+			fmt.Printf("Monthly Rank:\t%d\n", video.HentaiVideo.MonthlyRank)
+			fmt.Printf("Created At:\t%s\n", time.Unix(video.HentaiVideo.CreatedAtUnix, 0))
+			fmt.Printf("Released At:\t%s\n", time.Unix(video.HentaiVideo.ReleasedAtUnix, 0))
+			fmt.Printf("Output:\t\t%s\n\n", video.OutputPath)
+		} else {
+			fmt.Printf("%s - %s\n", video.HentaiVideo.Name, video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
+			fmt.Printf("%s\n\n", video.OutputPath)
+		}
 	}
-
-	name := video.HentaiVideo.Name
-	slug := video.HentaiVideo.Slug
-	quality := video.VideosManifest.Servers[0].Streams[index].Height
-	size := video.VideosManifest.Servers[0].Streams[index].Size
-	id := video.VideosManifest.Servers[0].Streams[index].ID
-
-	pathsErr := setPaths(slug, quality, id)
-	if pathsErr != nil {
-		return pathsErr
+	var size int64
+	for _, video := range videos {
+		size += video.VideosManifest.Servers[0].Streams[video.StreamIndex].Size
 	}
-
-	if infoFlag {
-		fmt.Println(fmt.Sprintf("\nName:\t\t%s", name))
-		fmt.Println(fmt.Sprintf("Quality:\t%sp", quality))
-		fmt.Println(fmt.Sprintf("Views:\t\t%d", video.HentaiVideo.Views))
-		fmt.Println(fmt.Sprintf("Interests:\t%d", video.HentaiVideo.Interests))
-		fmt.Println(fmt.Sprintf("Brand:\t\t%s", video.HentaiVideo.Brand))
-		fmt.Println(fmt.Sprintf("Likes:\t\t%d", video.HentaiVideo.Likes))
-		fmt.Println(fmt.Sprintf("Dislikes:\t%d", video.HentaiVideo.Dislikes))
-		fmt.Println(fmt.Sprintf("Downloads:\t%d", video.HentaiVideo.Downloads))
-		fmt.Println(fmt.Sprintf("Monthly Rank:\t%d", video.HentaiVideo.MonthlyRank))
-		fmt.Println(fmt.Sprintf("Created At:\t%s", time.Unix(video.HentaiVideo.CreatedAtUnix, 0)))
-		fmt.Println(fmt.Sprintf("Released At:\t%s", time.Unix(video.HentaiVideo.ReleasedAtUnix, 0)))
-	} else {
-		fmt.Println(fmt.Sprintf("\n%s - %s", name, quality))
-	}
-	fmt.Println(fmt.Sprintf("\nTotal Download Size: %d MB", size))
-	fmt.Println(fmt.Sprintf("\nOutput: %s\n", outputPath))
+	fmt.Printf("Total Download Size: %d MB\n\n", size)
 
 	c, err := utils.AskForConfirmation(":: Proceed with download?")
 	if err != nil {
@@ -127,15 +139,12 @@ func get(url string) error {
 		os.Exit(0)
 	}
 
-	if utils.CheckIfPathExists(outputPath) {
-		return fmt.Errorf("error: file '%s' already exists", outputPath)
-	}
-
 	downloader := utils.Downloader{Client: client}
-	fmt.Printf("\n%s", name)
-	dlErr := downloader.Download(fmt.Sprintf("https://weeb.hanime.tv/weeb-api-cache/api/v8/m3u8s/%d", id), tmpPath, outputPath)
-	if dlErr != nil {
-		return err
+	for _, video := range videos {
+		err := download(&downloader, &video)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Println("\nDownload completed!")
@@ -143,20 +152,17 @@ func get(url string) error {
 	return nil
 }
 
-func getClient() (*http.Client, error) {
-	transport := &http.Transport{}
-
-	if proxyFlag != "" {
-		proxy, err := url.Parse(proxyFlag)
-		if err != nil {
-			return nil, err
-		}
-		transport.Proxy = http.ProxyURL(proxy)
+func download(downloader *utils.Downloader, video *types.Video) error {
+	if utils.CheckIfPathExists(video.OutputPath) {
+		return fmt.Errorf("error: file '%s' already exists", video.OutputPath)
 	}
-
-	client := &http.Client{Transport: transport}
-
-	return client, nil
+	fmt.Printf("\n%s", video.HentaiVideo.Name)
+	tmpPath = fmt.Sprintf("%s-%d", video.OutputPath[:len(video.OutputPath)-4], video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID)
+	err := downloader.Download(fmt.Sprintf("%s%d", apiM3U8, video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID), tmpPath, video.OutputPath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getVideo(client *http.Client, url string) (*types.Video, error) {
@@ -171,7 +177,7 @@ func getVideo(client *http.Client, url string) (*types.Video, error) {
 	headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
 	headers["Origin"] = "https://hanime.tv"
 
-	body, err := utils.Request("GET", client, fmt.Sprintf("https://hw.hanime.tv/api/v8/video?id=%s", slug), headers, nil)
+	body, err := utils.Request("GET", client, fmt.Sprintf("%s%s", apiVideo, slug), headers, nil)
 	if err != nil {
 		return video, err
 	}
@@ -209,7 +215,7 @@ func getStreamIndex(streams []types.Stream) (int, error) {
 	return 0, nil
 }
 
-func setPaths(slug string, quality string, id int64) error {
+func getOutputPath(slug string, quality string) (string, error) {
 	var outputName string
 	if outputNameFlag != "" {
 		if !strings.HasSuffix(outputNameFlag, ".mp4") {
@@ -220,20 +226,19 @@ func setPaths(slug string, quality string, id int64) error {
 		outputName = fmt.Sprintf("%s-%s.mp4", slug, quality)
 	}
 
+	var outputPath string
 	if outputPathFlag != "" {
 		if !utils.CheckIfPathExists(outputPathFlag) {
-			return fmt.Errorf("error: path '%s' does not exist", outputPathFlag)
+			return "", fmt.Errorf("error: path '%s' does not exist", outputPathFlag)
 		}
 		outputPath = filepath.Join(outputPathFlag, outputName)
-		tmpPath = filepath.Join(outputPathFlag, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
-			return err
+			return "", err
 		}
 		outputPath = filepath.Join(wd, outputName)
-		tmpPath = filepath.Join(wd, fmt.Sprintf("%s-%s-%d-tmp", slug, quality, id))
 	}
 
-	return nil
+	return outputPath, nil
 }

@@ -3,6 +3,8 @@ package types
 type Video struct {
 	HentaiVideo    HentaiVideo    `json:"hentai_video"`
 	VideosManifest VideosManifest `json:"videos_manifest"`
+	StreamIndex    int
+	OutputPath     string
 }
 
 type HentaiVideo struct {
