@@ -19,16 +19,6 @@ func CheckIfPathExists(path string) bool {
 	return true
 }
 
-func CleanUp(path string) error {
-	if CheckIfPathExists(path) {
-		err := os.RemoveAll(path)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func CheckIfInArray(arr []string, val string) bool {
 	for _, i := range arr {
 		if i == val {
