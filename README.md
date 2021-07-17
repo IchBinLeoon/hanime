@@ -13,6 +13,7 @@ Command-line tool to download videos from hanime.tv
   - [Install from release](#Install-from-release)
 - [Usage](#Usage)
   - [Download a video](#Download-a-video)
+  - [Download multiple videos](#Download-multiple-videos)
   - [Specify the video quality](#Specify-the-video-quality)
   - [Specify a custom output path and name](#Specify-a-custom-output-path-and-name)
   - [Use a proxy](#Use-a-proxy)
@@ -46,6 +47,11 @@ If you don't want to build the cli yourself, you can download an executable file
 ### Download a video
 ```
 hanime get https://hanime.tv/videos/hentai/XXX
+```
+
+### Download multiple videos
+```
+hanime get https://hanime.tv/videos/hentai/XXX https://hanime.tv/videos/hentai/XXX ...
 ```
 
 ### Specify the video quality
