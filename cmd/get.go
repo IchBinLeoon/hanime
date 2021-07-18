@@ -96,7 +96,7 @@ func get(urls []string) error {
 			return err
 		}
 		if len(urls) > 1 {
-			if outputNameFlag != "" {
+			if outputNameFlag != "" || utils.CheckIfMultipleInArray(urls, url) {
 				path = fmt.Sprintf("%s-%d.mp4", path[:len(path)-4], i)
 			}
 		}
@@ -153,10 +153,11 @@ func get(urls []string) error {
 }
 
 func download(downloader *utils.Downloader, video *types.Video) error {
-	if utils.CheckIfPathExists(video.OutputPath) {
-		return fmt.Errorf("error: file '%s' already exists", video.OutputPath)
-	}
 	fmt.Printf("\n%s", video.HentaiVideo.Name)
+	if utils.CheckIfPathExists(video.OutputPath) {
+		fmt.Printf("\nwarning: file '%s' already exists, skipping\n", video.OutputPath)
+		return nil
+	}
 	tmpPath = fmt.Sprintf("%s-%d", video.OutputPath[:len(video.OutputPath)-4], video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID)
 	err := downloader.Download(fmt.Sprintf("%s%d", apiM3U8, video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID), tmpPath, video.OutputPath)
 	if err != nil {
@@ -218,6 +219,8 @@ func getStreamIndex(streams []types.Stream) (int, error) {
 func getOutputPath(slug string, quality string) (string, error) {
 	var outputName string
 	if outputNameFlag != "" {
+		re := regexp.MustCompile(`[^a-zA-Z0-9._-]`)
+		outputNameFlag = re.ReplaceAllString(outputNameFlag, "")
 		if !strings.HasSuffix(outputNameFlag, ".mp4") {
 			outputNameFlag += ".mp4"
 		}

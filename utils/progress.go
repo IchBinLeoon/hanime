@@ -26,14 +26,14 @@ func (bar *Bar) Next() {
 	bar.percent = bar.getPercent()
 	if bar.percent != last {
 		var i int64 = 0
-		for ; i < bar.percent - last; i++ {
+		for ; i < bar.percent-last; i++ {
 			bar.rate += bar.graph
 		}
-		fmt.Printf("\r[%-50s]%3d%% %8d/%d", bar.rate, bar.percent * 2, bar.current, bar.total)
+		fmt.Printf("\r[%-50s]%3d%% %8d/%d", bar.rate, bar.percent*2, bar.current, bar.total)
 	}
 }
 
-func (bar *Bar) Finish(){
+func (bar *Bar) Finish() {
 	fmt.Println()
 }
 

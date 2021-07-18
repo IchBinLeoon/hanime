@@ -27,3 +27,16 @@ func CheckIfInArray(arr []string, val string) bool {
 	}
 	return false
 }
+
+func CheckIfMultipleInArray(arr []string, val string) bool {
+	counter := 0
+	for _, i := range arr {
+		if i == val {
+			counter++
+		}
+		if counter > 1 {
+			return true
+		}
+	}
+	return false
+}

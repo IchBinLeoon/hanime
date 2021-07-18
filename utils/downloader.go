@@ -8,11 +8,16 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 
 	"github.com/grafov/m3u8"
 )
+
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}
 
 type Downloader struct {
 	Client *http.Client
@@ -112,7 +117,7 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 
 func createTmpFolder(path string) error {
 	if CheckIfPathExists(path) {
-		fmt.Print(fmt.Errorf("\nerror: cannot create temporary folder, path '%s' already exists", path))
+		fmt.Print(fmt.Errorf("error: cannot create temporary folder, path '%s' already exists", path))
 		os.Exit(1)
 	}
 
@@ -185,8 +190,7 @@ func getKey(client *http.Client, url string) ([]byte, error) {
 	return data, nil
 }
 
-
-func downloadTS(client *http.Client, url string, path string, key []byte, iv[]byte) error {
+func downloadTS(client *http.Client, url string, path string, key []byte, iv []byte) error {
 	body, err := Request("GET", client, url, nil, nil)
 	if err != nil {
 		return err

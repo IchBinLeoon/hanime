@@ -5,10 +5,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 func DefaultClient(proxyUrl string) (*http.Client, error) {
-	transport := &http.Transport{DisableCompression: true}
+	transport := &http.Transport{
+		DisableCompression: true,
+		IdleConnTimeout:    30 * time.Second,
+	}
 	if proxyUrl != "" {
 		proxy, err := url.Parse(proxyUrl)
 		if err != nil {
@@ -16,7 +20,10 @@ func DefaultClient(proxyUrl string) (*http.Client, error) {
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 	}
-	return &http.Client{Transport: transport}, nil
+	return &http.Client{
+		Transport: transport,
+		Timeout:   5 * time.Minute,
+	}, nil
 }
 
 type HttpError struct {
