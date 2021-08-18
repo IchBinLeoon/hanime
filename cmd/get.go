@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -142,7 +143,11 @@ func get(urls []string) error {
 			return err
 		}
 		if !c {
-			fmt.Println("\nCancelled")
+			if runtime.GOOS == "windows" {
+				fmt.Println("\n[✗] Cancelled!")
+			} else {
+				fmt.Println("\n[\033[0;31m✗\033[0;m] Cancelled!")
+			}
 			os.Exit(0)
 		}
 	}
@@ -155,7 +160,11 @@ func get(urls []string) error {
 		}
 	}
 
-	fmt.Println("\nDownload completed!")
+	if runtime.GOOS == "windows" {
+		fmt.Println("\n[✓] Download completed!")
+	} else {
+		fmt.Println("\n[\033[0;32m✓\033[0;m] Download completed!")
+	}
 
 	return nil
 }

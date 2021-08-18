@@ -50,7 +50,7 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 	case m3u8.MEDIA:
 		mediapl := p.(*m3u8.MediaPlaylist)
 
-		fmt.Print("» Downloading media files\n\n")
+		fmt.Print("» Downloading media files\n")
 
 		var segments []string
 		for _, v := range mediapl.Segments {
@@ -98,7 +98,7 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 		wg.Wait()
 		bar.Finish()
 
-		fmt.Print("\n» Merging media files\n")
+		fmt.Print("» Merging media files\n")
 		out, err := MergeToMP4(fileListPath, outputPath)
 		if err != nil {
 			fmt.Println(string(out))

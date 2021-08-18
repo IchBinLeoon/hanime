@@ -32,7 +32,7 @@ func (bar *Bar) Add(value int64) {
 		for ; i < bar.percent-last; i++ {
 			bar.rate += bar.graph
 		}
-		fmt.Printf("\r[%-50s]%3d%% %8d/%d", bar.rate, bar.percent*2, bar.current, bar.total)
+		fmt.Printf("\r» [%-50s]%4d%% %6d/%d", bar.rate, bar.percent*2, bar.current, bar.total)
 	}
 }
 
