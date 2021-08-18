@@ -13,8 +13,8 @@ type Bar struct {
 func NewProgressBar(start int64, total int64, graph string) *Bar {
 	bar := &Bar{
 		current: start,
-		total: total,
-		graph: graph,
+		total:   total,
+		graph:   graph,
 	}
 	bar.percent = bar.getPercent()
 	for i := 0; i < int(bar.percent); i += 2 {

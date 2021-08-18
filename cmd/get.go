@@ -32,6 +32,7 @@ var outputPathFlag string
 var outputNameFlag string
 var proxyFlag string
 var infoFlag bool
+var forceFlag bool
 
 var getUsage = `Usage:
   hanime get <urls> [flags]
@@ -43,6 +44,7 @@ Flags:
   -O, --Output    custom output name
   -p, --proxy     proxy url
   -i, --info      display video info
+  -f, --force     overwrite existing files
 `
 
 func init() {
@@ -53,6 +55,7 @@ func init() {
 	getCmd.Flags().StringVarP(&outputNameFlag, "Output", "O", "", "custom output name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
 	getCmd.Flags().BoolVarP(&infoFlag, "info", "i", false, "display video info")
+	getCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "overwrite existing files")
 }
 
 var getCmd = &cobra.Command{
@@ -152,8 +155,8 @@ func get(urls []string) error {
 }
 
 func download(downloader *utils.Downloader, video *utils.Video) error {
-	fmt.Printf("\n%s", video.HentaiVideo.Name)
-	if utils.CheckIfPathExists(video.OutputPath) {
+	fmt.Printf("\n%s:", video.HentaiVideo.Name)
+	if utils.CheckIfPathExists(video.OutputPath) && !forceFlag {
 		fmt.Printf("\nwarning: file '%s' already exists, skipping\n", video.OutputPath)
 		return nil
 	}
