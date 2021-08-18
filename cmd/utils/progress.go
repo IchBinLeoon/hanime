@@ -10,18 +10,21 @@ type Bar struct {
 	graph   string
 }
 
-func (bar *Bar) New(start int64, total int64, graph string) {
-	bar.current = start
-	bar.total = total
-	bar.graph = graph
+func NewProgressBar(start int64, total int64, graph string) *Bar {
+	bar := &Bar{
+		current: start,
+		total: total,
+		graph: graph,
+	}
 	bar.percent = bar.getPercent()
 	for i := 0; i < int(bar.percent); i += 2 {
 		bar.rate += bar.graph
 	}
+	return bar
 }
 
-func (bar *Bar) Next() {
-	bar.current += 1
+func (bar *Bar) Add(value int64) {
+	bar.current += value
 	last := bar.percent
 	bar.percent = bar.getPercent()
 	if bar.percent != last {
@@ -34,7 +37,7 @@ func (bar *Bar) Next() {
 }
 
 func (bar *Bar) Finish() {
-	fmt.Println()
+	fmt.Print("\n")
 }
 
 func (bar *Bar) getPercent() int64 {

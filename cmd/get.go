@@ -74,7 +74,7 @@ var getCmd = &cobra.Command{
 }
 
 func get(urls []string) error {
-	client, err := utils.DefaultClient(proxyFlag)
+	client, err := utils.NewHttpClient(proxyFlag)
 	if err != nil {
 		return err
 	}
@@ -138,9 +138,9 @@ func get(urls []string) error {
 		os.Exit(0)
 	}
 
-	downloader := utils.Downloader{Client: client}
+	downloader := utils.NewDownloader(client)
 	for _, video := range videos {
-		err := download(&downloader, &video)
+		err := download(downloader, &video)
 		if err != nil {
 			return err
 		}
