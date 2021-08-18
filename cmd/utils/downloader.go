@@ -23,6 +23,12 @@ type Downloader struct {
 	Client *http.Client
 }
 
+func NewDownloader(client *http.Client) *Downloader {
+	return &Downloader{
+		Client: client,
+	}
+}
+
 func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPath string) error {
 	fmt.Print("\n» Creating temporary folder\n")
 	err := createTmpFolder(tmpPath)
@@ -44,7 +50,7 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 	case m3u8.MEDIA:
 		mediapl := p.(*m3u8.MediaPlaylist)
 
-		fmt.Print("» Downloading media files\n\n")
+		fmt.Print("» Downloading media files\n")
 
 		var segments []string
 		for _, v := range mediapl.Segments {
@@ -71,9 +77,7 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 			iv = []byte(mediapl.Key.IV)
 		}
 
-		var bar Bar
-		bar.New(0, int64(len(segments)), "█")
-
+		bar := NewProgressBar(0, int64(len(segments)), "█")
 		wg := sync.WaitGroup{}
 		for k, v := range segments {
 			wg.Add(1)
@@ -88,14 +92,13 @@ func (downloader *Downloader) Download(m3u8Url string, tmpPath string, outputPat
 					os.Exit(1)
 				}
 				wg.Done()
-				bar.Next()
+				bar.Add(1)
 			}(k, v)
 		}
 		wg.Wait()
-
 		bar.Finish()
 
-		fmt.Print("\n» Merging media files\n")
+		fmt.Print("» Merging media files\n")
 		out, err := MergeToMP4(fileListPath, outputPath)
 		if err != nil {
 			fmt.Println(string(out))

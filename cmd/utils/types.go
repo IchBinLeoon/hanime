@@ -1,4 +1,4 @@
-package types
+package utils
 
 type Video struct {
 	HentaiVideo    HentaiVideo    `json:"hentai_video"`

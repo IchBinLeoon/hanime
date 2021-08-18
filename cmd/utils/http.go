@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func DefaultClient(proxyUrl string) (*http.Client, error) {
+func NewHttpClient(proxyUrl string) (*http.Client, error) {
 	transport := &http.Transport{
 		DisableCompression: true,
 		IdleConnTimeout:    30 * time.Second,

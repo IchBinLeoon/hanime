@@ -8,11 +8,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/IchBinLeoon/hanime/types"
-	"github.com/IchBinLeoon/hanime/utils"
+	"github.com/IchBinLeoon/hanime/cmd/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +33,8 @@ var outputPathFlag string
 var outputNameFlag string
 var proxyFlag string
 var infoFlag bool
+var forceFlag bool
+var yesFlag bool
 
 var getUsage = `Usage:
   hanime get <urls> [flags]
@@ -44,6 +46,8 @@ Flags:
   -O, --Output    custom output name
   -p, --proxy     proxy url
   -i, --info      display video info
+  -f, --force     overwrite existing files
+  -y, --yes       download without asking
 `
 
 func init() {
@@ -54,6 +58,8 @@ func init() {
 	getCmd.Flags().StringVarP(&outputNameFlag, "Output", "O", "", "custom output name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
 	getCmd.Flags().BoolVarP(&infoFlag, "info", "i", false, "display video info")
+	getCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "overwrite existing files")
+	getCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "download without asking")
 }
 
 var getCmd = &cobra.Command{
@@ -75,12 +81,12 @@ var getCmd = &cobra.Command{
 }
 
 func get(urls []string) error {
-	client, err := utils.DefaultClient(proxyFlag)
+	client, err := utils.NewHttpClient(proxyFlag)
 	if err != nil {
 		return err
 	}
 
-	var videos []types.Video
+	var videos []utils.Video
 	for i, url := range urls {
 		video, err := getVideo(client, url)
 		if err != nil {
@@ -108,7 +114,7 @@ func get(urls []string) error {
 	for _, video := range videos {
 		if infoFlag {
 			fmt.Printf("Name:\t\t%s\n", video.HentaiVideo.Name)
-			fmt.Printf("Quality:\t%s\np", video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
+			fmt.Printf("Quality:\t%sp\n", video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
 			fmt.Printf("Views:\t\t%d\n", video.HentaiVideo.Views)
 			fmt.Printf("Interests:\t%d\n", video.HentaiVideo.Interests)
 			fmt.Printf("Brand:\t\t%s\n", video.HentaiVideo.Brand)
@@ -128,33 +134,44 @@ func get(urls []string) error {
 	for _, video := range videos {
 		size += video.VideosManifest.Servers[0].Streams[video.StreamIndex].Size
 	}
-	fmt.Printf("Total Download Size: %d MB\n\n", size)
+	fmt.Printf("Total Download Size: %d MB\n", size)
 
-	c, err := utils.AskForConfirmation(":: Proceed with download?")
-	if err != nil {
-		return err
-	}
-	if !c {
-		fmt.Println("\nCancelled")
-		os.Exit(0)
+	if !yesFlag {
+		fmt.Print("\n")
+		c, err := utils.AskForConfirmation(":: Proceed with download?")
+		if err != nil {
+			return err
+		}
+		if !c {
+			if runtime.GOOS == "windows" {
+				fmt.Println("\n[✗] Cancelled!")
+			} else {
+				fmt.Println("\n[\033[0;31m✗\033[0;m] Cancelled!")
+			}
+			os.Exit(0)
+		}
 	}
 
-	downloader := utils.Downloader{Client: client}
+	downloader := utils.NewDownloader(client)
 	for _, video := range videos {
-		err := download(&downloader, &video)
+		err := download(downloader, &video)
 		if err != nil {
 			return err
 		}
 	}
 
-	fmt.Println("\nDownload completed!")
+	if runtime.GOOS == "windows" {
+		fmt.Println("\n[✓] Download completed!")
+	} else {
+		fmt.Println("\n[\033[0;32m✓\033[0;m] Download completed!")
+	}
 
 	return nil
 }
 
-func download(downloader *utils.Downloader, video *types.Video) error {
-	fmt.Printf("\n%s", video.HentaiVideo.Name)
-	if utils.CheckIfPathExists(video.OutputPath) {
+func download(downloader *utils.Downloader, video *utils.Video) error {
+	fmt.Printf("\n%s:", video.HentaiVideo.Name)
+	if utils.CheckIfPathExists(video.OutputPath) && !forceFlag {
 		fmt.Printf("\nwarning: file '%s' already exists, skipping\n", video.OutputPath)
 		return nil
 	}
@@ -166,8 +183,8 @@ func download(downloader *utils.Downloader, video *types.Video) error {
 	return nil
 }
 
-func getVideo(client *http.Client, url string) (*types.Video, error) {
-	video := &types.Video{}
+func getVideo(client *http.Client, url string) (*utils.Video, error) {
+	video := &utils.Video{}
 
 	slug, err := parseUrl(url)
 	if err != nil {
@@ -204,7 +221,7 @@ func parseUrl(url string) (string, error) {
 	return "", fmt.Errorf("error: url '%s' is invalid", url)
 }
 
-func getStreamIndex(streams []types.Stream) (int, error) {
+func getStreamIndex(streams []utils.Stream) (int, error) {
 	if !utils.CheckIfInArray(videoQualities, qualityFlag) {
 		return 0, fmt.Errorf("error: quality '%s' is invalid, possible values: 1080, 720, 480, 360", qualityFlag)
 	}
