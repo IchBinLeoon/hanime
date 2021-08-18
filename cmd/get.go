@@ -114,7 +114,7 @@ func get(urls []string) error {
 	for _, video := range videos {
 		if infoFlag {
 			fmt.Printf("Name:\t\t%s\n", video.HentaiVideo.Name)
-			fmt.Printf("Quality:\t%s\np", video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
+			fmt.Printf("Quality:\t%sp\n", video.VideosManifest.Servers[0].Streams[video.StreamIndex].Height)
 			fmt.Printf("Views:\t\t%d\n", video.HentaiVideo.Views)
 			fmt.Printf("Interests:\t%d\n", video.HentaiVideo.Interests)
 			fmt.Printf("Brand:\t\t%s\n", video.HentaiVideo.Brand)
