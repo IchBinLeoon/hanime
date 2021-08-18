@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IchBinLeoon/hanime/types"
-	"github.com/IchBinLeoon/hanime/utils"
+	"github.com/IchBinLeoon/hanime/cmd/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -80,7 +79,7 @@ func get(urls []string) error {
 		return err
 	}
 
-	var videos []types.Video
+	var videos []utils.Video
 	for i, url := range urls {
 		video, err := getVideo(client, url)
 		if err != nil {
@@ -152,7 +151,7 @@ func get(urls []string) error {
 	return nil
 }
 
-func download(downloader *utils.Downloader, video *types.Video) error {
+func download(downloader *utils.Downloader, video *utils.Video) error {
 	fmt.Printf("\n%s", video.HentaiVideo.Name)
 	if utils.CheckIfPathExists(video.OutputPath) {
 		fmt.Printf("\nwarning: file '%s' already exists, skipping\n", video.OutputPath)
@@ -166,8 +165,8 @@ func download(downloader *utils.Downloader, video *types.Video) error {
 	return nil
 }
 
-func getVideo(client *http.Client, url string) (*types.Video, error) {
-	video := &types.Video{}
+func getVideo(client *http.Client, url string) (*utils.Video, error) {
+	video := &utils.Video{}
 
 	slug, err := parseUrl(url)
 	if err != nil {
@@ -204,7 +203,7 @@ func parseUrl(url string) (string, error) {
 	return "", fmt.Errorf("error: url '%s' is invalid", url)
 }
 
-func getStreamIndex(streams []types.Stream) (int, error) {
+func getStreamIndex(streams []utils.Stream) (int, error) {
 	if !utils.CheckIfInArray(videoQualities, qualityFlag) {
 		return 0, fmt.Errorf("error: quality '%s' is invalid, possible values: 1080, 720, 480, 360", qualityFlag)
 	}
