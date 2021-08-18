@@ -18,6 +18,8 @@ Command-line tool to download videos from hanime.tv
   - [Specify a custom output path and name](#Specify-a-custom-output-path-and-name)
   - [Use a proxy](#Use-a-proxy)
   - [Display video info](#Display-video-info)
+  - [Overwrite existing files](#Overwrite-existing-files)
+  - [Download without asking](#Download-without-asking)
 - [Contribute](#Contribute)
 - [License](#License)
 
@@ -76,6 +78,18 @@ hanime get https://hanime.tv/videos/hentai/XXX -p XXX://host:port
 The `-i` or `--info` flag displays information about the video.
 ```
 hanime get https://hanime.tv/videos/hentai/XXX -i
+```
+
+### Overwrite existing files
+The `-f` or `--force` flag overwrites already existing files with the same name.
+```
+hanime get https://hanime.tv/videos/hentai/XXX -f
+```
+
+### Download without asking
+The `-y` or `--yes` flag downloads without asking for confirmation.
+```
+hanime get https://hanime.tv/videos/hentai/XXX -y
 ```
 
 ## Contribute

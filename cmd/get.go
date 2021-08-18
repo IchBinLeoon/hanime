@@ -33,6 +33,7 @@ var outputNameFlag string
 var proxyFlag string
 var infoFlag bool
 var forceFlag bool
+var yesFlag bool
 
 var getUsage = `Usage:
   hanime get <urls> [flags]
@@ -45,6 +46,7 @@ Flags:
   -p, --proxy     proxy url
   -i, --info      display video info
   -f, --force     overwrite existing files
+  -y, --yes       download without asking
 `
 
 func init() {
@@ -56,6 +58,7 @@ func init() {
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
 	getCmd.Flags().BoolVarP(&infoFlag, "info", "i", false, "display video info")
 	getCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "overwrite existing files")
+	getCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "download without asking")
 }
 
 var getCmd = &cobra.Command{
@@ -130,15 +133,18 @@ func get(urls []string) error {
 	for _, video := range videos {
 		size += video.VideosManifest.Servers[0].Streams[video.StreamIndex].Size
 	}
-	fmt.Printf("Total Download Size: %d MB\n\n", size)
+	fmt.Printf("Total Download Size: %d MB\n", size)
 
-	c, err := utils.AskForConfirmation(":: Proceed with download?")
-	if err != nil {
-		return err
-	}
-	if !c {
-		fmt.Println("\nCancelled")
-		os.Exit(0)
+	if !yesFlag {
+		fmt.Print("\n")
+		c, err := utils.AskForConfirmation(":: Proceed with download?")
+		if err != nil {
+			return err
+		}
+		if !c {
+			fmt.Println("\nCancelled")
+			os.Exit(0)
+		}
 	}
 
 	downloader := utils.NewDownloader(client)
