@@ -8,7 +8,7 @@ Command-line tool to download videos from hanime.tv
 
 - [Requirements](#Requirements)
 - [Installation](#Installation)
-  - [Install via go get](#Install-via-go-get)
+  - [Install via go install](#Install-via-go-install)
   - [Install from source](#Install-from-source)
   - [Install from release](#Install-from-release)
 - [Usage](#Usage)
@@ -27,10 +27,10 @@ Command-line tool to download videos from hanime.tv
 - [FFmpeg](https://www.ffmpeg.org/)
 
 ## Installation
-### Install via go get
+### Install via go install
 Make sure you have [Go](https://golang.org/) installed.
 ```
-go get -u github.com/IchBinLeoon/hanime
+go install github.com/IchBinLeoon/hanime@latest
 ```
 
 ### Install from source
