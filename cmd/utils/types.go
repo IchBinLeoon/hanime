@@ -34,4 +34,5 @@ type Stream struct {
 	ID     int64  `json:"id"`
 	Height string `json:"height"`
 	Size   int64  `json:"filesize_mbs"`
+	Url    string `json:"url"`
 }

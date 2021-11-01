@@ -57,9 +57,10 @@ hanime get https://hanime.tv/videos/hentai/XXX https://hanime.tv/videos/hentai/X
 ```
 
 ### Specify the video quality
-The `-q` or `--quality` flag sets the video quality. Default is 1080.
+**Note: Due to a change in the API, downloading 1080p videos is currently no longer possible.**  
+The `-q` or `--quality` flag sets the video quality. Default is 720.
 ```
-hanime get https://hanime.tv/videos/hentai/XXX -q 720
+hanime get https://hanime.tv/videos/hentai/XXX -q 480
 ```
 
 ### Specify a custom output path and name

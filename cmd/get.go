@@ -16,13 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const apiVideo = "https://hw.hanime.tv/api/v8/video?id="
-const apiM3U8 = "https://weeb.hanime.tv/weeb-api-cache/api/v8/m3u8s/"
+const videoFromSlug = "https://hw.hanime.tv/api/v8/video?id="
 
 var tmpPath string
 
 var videoQualities = []string{
-	"1080",
+	// "1080",
 	"720",
 	"480",
 	"360",
@@ -41,7 +40,7 @@ var getUsage = `Usage:
 
 Flags:
   -h, --help      help for get
-  -q, --quality	  video quality (default 1080)
+  -q, --quality	  video quality (default ` + videoQualities[0] + `)
   -o, --output    custom output path
   -O, --Output    custom output name
   -p, --proxy     proxy url
@@ -53,7 +52,7 @@ Flags:
 func init() {
 	rootCmd.AddCommand(getCmd)
 	getCmd.SetUsageTemplate(getUsage)
-	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", "1080", "video quality")
+	getCmd.Flags().StringVarP(&qualityFlag, "quality", "q", videoQualities[0], "video quality")
 	getCmd.Flags().StringVarP(&outputPathFlag, "output", "o", "", "custom output path")
 	getCmd.Flags().StringVarP(&outputNameFlag, "Output", "O", "", "custom output name")
 	getCmd.Flags().StringVarP(&proxyFlag, "proxy", "p", "", "proxy url")
@@ -176,7 +175,7 @@ func download(downloader *utils.Downloader, video *utils.Video) error {
 		return nil
 	}
 	tmpPath = fmt.Sprintf("%s-%d", video.OutputPath[:len(video.OutputPath)-4], video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID)
-	err := downloader.Download(fmt.Sprintf("%s%d", apiM3U8, video.VideosManifest.Servers[0].Streams[video.StreamIndex].ID), tmpPath, video.OutputPath)
+	err := downloader.Download(video.VideosManifest.Servers[0].Streams[video.StreamIndex].Url, tmpPath, video.OutputPath)
 	if err != nil {
 		return err
 	}
@@ -195,7 +194,7 @@ func getVideo(client *http.Client, url string) (*utils.Video, error) {
 	headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
 	headers["Origin"] = "https://hanime.tv"
 
-	body, err := utils.Request("GET", client, fmt.Sprintf("%s%s", apiVideo, slug), headers, nil)
+	body, err := utils.Request("GET", client, fmt.Sprintf("%s%s", videoFromSlug, slug), headers, nil)
 	if err != nil {
 		return video, err
 	}
@@ -223,7 +222,7 @@ func parseUrl(url string) (string, error) {
 
 func getStreamIndex(streams []utils.Stream) (int, error) {
 	if !utils.CheckIfInArray(videoQualities, qualityFlag) {
-		return 0, fmt.Errorf("error: quality '%s' is invalid, possible values: 1080, 720, 480, 360", qualityFlag)
+		return 0, fmt.Errorf("error: quality '%s' is invalid, possible values: %s", qualityFlag, strings.Join(videoQualities, ", "))
 	}
 	for k, v := range streams {
 		if v.Height == qualityFlag {
