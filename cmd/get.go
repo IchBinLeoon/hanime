@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const videoFromSlug = "https://hw.hanime.tv/api/v8/video?id="
+const videoFromSlug = "https://hanime.tv/api/v8/video?id="
 
 var tmpPath string
 

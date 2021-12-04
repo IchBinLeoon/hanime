@@ -9,7 +9,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:     "hanime",
-	Version: "1.0.5",
+	Version: "1.0.6",
 	Short:   "Command-line tool to download videos from hanime.tv",
 	Long:    "Command-line tool to download videos from hanime.tv\n\nComplete documentation is available at https://github.com/IchBinLeoon/hanime",
 }
