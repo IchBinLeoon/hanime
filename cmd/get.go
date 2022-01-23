@@ -212,7 +212,7 @@ func getVideo(client *http.Client, url string) (*utils.Video, error) {
 }
 
 func parseUrl(url string) (string, error) {
-	re := regexp.MustCompile(`^https://hanime.tv/videos/hentai/(.*)$`)
+	re := regexp.MustCompile(`^https://hanime\.tv/(?:videos/hentai|hentai-videos)/(.*)$`)
 	m := re.FindStringSubmatch(url)
 	if len(m) > 1 && m[1] != "" {
 		return m[1], nil
