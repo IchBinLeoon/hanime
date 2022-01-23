@@ -6,6 +6,8 @@
 
 Command-line tool to download videos from hanime.tv
 
+**Note: The main purpose of the downloader was to download 1080p videos without having a premium account. Due to a change in the API, this is currently no longer possible. For this reason, do not expect any major updates.**
+
 - [Requirements](#Requirements)
 - [Installation](#Installation)
   - [Install via go install](#Install-via-go-install)
@@ -57,7 +59,6 @@ hanime get https://hanime.tv/videos/hentai/XXX https://hanime.tv/videos/hentai/X
 ```
 
 ### Specify the video quality
-**Note: Due to a change in the API, downloading 1080p videos is currently no longer possible.**  
 The `-q` or `--quality` flag sets the video quality. Default is 720.
 ```
 hanime get https://hanime.tv/videos/hentai/XXX -q 480
